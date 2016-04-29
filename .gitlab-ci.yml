@@ -1,6 +1,6 @@
 before_script:
-  - apt-get update -qq && apt-get install -y -qq python cmake python-pip openmpi-bin libopenmpi-dev libhdf5-openmpi-dev
-  - pip install cython numpy scipy mpi4py pyopencl
+  - apt-get update -qq && apt-get install -y -qq python cmake python-dev python-pip openmpi-bin libopenmpi-dev libhdf5-openmpi-dev
+  - pip install cython numpy scipy mpi4py pyopencl	
 
 
 build:

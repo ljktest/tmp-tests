@@ -1,0 +1,130 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+module fftw2py ! in fftw2py.f90
+    use fft3d
+    !use mpi
+    use client_data
+    use hysopparam
+    use fft2d
+    subroutine init_fftw_solver(resolution,lengths,comm,datashape,offset,dim,fftw_type_real) ! in fftw2py.f90:fftw2py
+        integer dimension(dim),intent(in) :: resolution
+        real(kind=pk) dimension(dim),intent(in),depend(dim) :: lengths
+        integer intent(in) :: comm
+        integer(kind=ik) dimension(dim),intent(out),depend(dim) :: datashape
+        integer(kind=ik) dimension(dim),intent(out),depend(dim) :: offset
+        integer, optional,intent(hide),check(len(resolution)>=dim),depend(resolution) :: dim=len(resolution)
+        logical, optional,intent(in) :: fftw_type_real=1
+    end subroutine init_fftw_solver
+    subroutine init_fftw_solver_scalar(resolution,lengths,comm,datashape,offset,dim,fftw_type_real) ! in fftw2py.f90:fftw2py
+        integer dimension(dim),intent(in) :: resolution
+        real(kind=pk) dimension(dim),intent(in),depend(dim) :: lengths
+        integer intent(in) :: comm
+        integer(kind=ik) dimension(dim),intent(out),depend(dim) :: datashape
+        integer(kind=ik) dimension(dim),intent(out),depend(dim) :: offset
+        integer, optional,intent(hide),check(len(resolution)>=dim),depend(resolution) :: dim=len(resolution)
+        logical, optional,intent(in) :: fftw_type_real=1
+    end subroutine init_fftw_solver_scalar
+    subroutine clean_fftw_solver(dim) ! in fftw2py.f90:fftw2py
+        integer intent(in) :: dim
+    end subroutine clean_fftw_solver
+    subroutine solve_poisson_2d(omega,velocity_x,velocity_y,ghosts_vort,ghosts_velo) ! in fftw2py.f90:fftw2py
+        real(kind=pk) dimension(:,:),intent(in) :: omega
+        real(kind=pk) dimension(size(omega,1),size(omega,2)),intent(in,out),depend(omega,omega) :: velocity_x
+        real(kind=pk) dimension(size(omega,1),size(omega,2)),intent(in,out),depend(omega,omega) :: velocity_y
+        integer dimension(2),intent(in) :: ghosts_vort
+        integer dimension(2),intent(in) :: ghosts_velo
+    end subroutine solve_poisson_2d
+    subroutine solve_diffusion_2d(nudt,omega,ghosts_vort) ! in fftw2py.f90:fftw2py
+        real(kind=pk) intent(in) :: nudt
+        real(kind=pk) dimension(:,:),intent(in,out) :: omega
+        integer dimension(2),intent(in) :: ghosts_vort
+    end subroutine solve_diffusion_2d
+    subroutine solve_poisson_3d(omega_x,omega_y,omega_z,velocity_x,velocity_y,velocity_z,ghosts_vort,ghosts_velo) ! in fftw2py.f90:fftw2py
+        real(kind=pk) dimension(:,:,:),intent(in) :: omega_x
+        real(kind=pk) dimension(:,:,:),intent(in) :: omega_y
+        real(kind=pk) dimension(:,:,:),intent(in) :: omega_z
+        real(kind=pk) dimension(size(omega_x,1),size(omega_y,2),size(omega_z,3)),intent(in,out),depend(omega_x,omega_y,omega_z) :: velocity_x
+        real(kind=pk) dimension(size(omega_x,1),size(omega_y,2),size(omega_z,3)),intent(in,out),depend(omega_x,omega_y,omega_z) :: velocity_y
+        real(kind=pk) dimension(size(omega_x,1),size(omega_y,2),size(omega_z,3)),intent(in,out),depend(omega_x,omega_y,omega_z) :: velocity_z
+        integer dimension(3),intent(in) :: ghosts_vort
+        integer dimension(3),intent(in) :: ghosts_velo
+    end subroutine solve_poisson_3d
+    subroutine solve_poisson_2d_c(omega,velocity_x,velocity_y) ! in fftw2py.f90:fftw2py
+        complex(kind=pk) dimension(:,:),intent(in) :: omega
+        complex(kind=pk) dimension(size(omega,1),size(omega,2)),intent(in,out),depend(omega,omega) :: velocity_x
+        complex(kind=pk) dimension(size(omega,1),size(omega,2)),intent(in,out),depend(omega,omega) :: velocity_y
+    end subroutine solve_poisson_2d_c
+    subroutine solve_poisson_3d_c(omega_x,omega_y,omega_z,velocity_x,velocity_y,velocity_z) ! in fftw2py.f90:fftw2py
+        complex(kind=pk) dimension(:,:,:),intent(in) :: omega_x
+        complex(kind=pk) dimension(:,:,:),intent(in) :: omega_y
+        complex(kind=pk) dimension(:,:,:),intent(in) :: omega_z
+        complex(kind=pk) dimension(size(omega_x,1),size(omega_y,2),size(omega_z,3)),intent(in,out),depend(omega_x,omega_y,omega_z) :: velocity_x
+        complex(kind=pk) dimension(size(omega_x,1),size(omega_y,2),size(omega_z,3)),intent(in,out),depend(omega_x,omega_y,omega_z) :: velocity_y
+        complex(kind=pk) dimension(size(omega_x,1),size(omega_y,2),size(omega_z,3)),intent(in,out),depend(omega_x,omega_y,omega_z) :: velocity_z
+    end subroutine solve_poisson_3d_c
+    subroutine solve_curl_diffusion_3d(nudt,velocity_x,velocity_y,velocity_z,omega_x,omega_y,omega_z,ghosts_velo,ghosts_vort) ! in fftw2py.f90:fftw2py
+        real(kind=pk) intent(in) :: nudt
+        real(kind=pk) dimension(:,:,:),intent(in) :: velocity_x
+        real(kind=pk) dimension(:,:,:),intent(in) :: velocity_y
+        real(kind=pk) dimension(:,:,:),intent(in) :: velocity_z
+        real(kind=pk) dimension(size(velocity_x,1),size(velocity_y,2),size(velocity_z,3)),intent(in,out),depend(velocity_x,velocity_y,velocity_z) :: omega_x
+        real(kind=pk) dimension(size(velocity_x,1),size(velocity_y,2),size(velocity_z,3)),intent(in,out),depend(velocity_x,velocity_y,velocity_z) :: omega_y
+        real(kind=pk) dimension(size(velocity_x,1),size(velocity_y,2),size(velocity_z,3)),intent(in,out),depend(velocity_x,velocity_y,velocity_z) :: omega_z
+        integer dimension(3),intent(in) :: ghosts_velo
+        integer dimension(3),intent(in) :: ghosts_vort
+    end subroutine solve_curl_diffusion_3d
+    subroutine solve_diffusion_3d(nudt,omega_x,omega_y,omega_z,ghosts) ! in fftw2py.f90:fftw2py
+        real(kind=pk) intent(in) :: nudt
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: omega_x
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: omega_y
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: omega_z
+        integer dimension(3),intent(in) :: ghosts
+    end subroutine solve_diffusion_3d
+    subroutine projection_om_3d(omega_x,omega_y,omega_z,ghosts) ! in fftw2py.f90:fftw2py
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: omega_x
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: omega_y
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: omega_z
+        integer dimension(3),intent(in) :: ghosts
+    end subroutine projection_om_3d
+    subroutine multires_om_3d(dxf,dyf,dzf,omega_x,omega_y,omega_z,ghosts) ! in fftw2py.f90:fftw2py
+        real(kind=pk) intent(in) :: dxf
+        real(kind=pk) intent(in) :: dyf
+        real(kind=pk) intent(in) :: dzf
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: omega_x
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: omega_y
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: omega_z
+        integer dimension(3),intent(in) :: ghosts
+    end subroutine multires_om_3d
+    subroutine pressure_3d(pressure,ghosts) ! in fftw2py.f90:fftw2py
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: pressure
+        integer dimension(3),intent(in) :: ghosts
+    end subroutine pressure_3d
+    subroutine solve_curl_3d(velocity_x,velocity_y,velocity_z,omega_x,omega_y,omega_z,ghosts_velo,ghosts_vort) ! in fftw2py.f90:fftw2py
+        real(kind=pk) dimension(:,:,:),intent(in) :: velocity_x
+        real(kind=pk) dimension(:,:,:),intent(in) :: velocity_y
+        real(kind=pk) dimension(:,:,:),intent(in) :: velocity_z
+        real(kind=pk) dimension(size(velocity_x,1),size(velocity_y,2),size(velocity_z,3)),intent(in,out),depend(velocity_x,velocity_y,velocity_z) :: omega_x
+        real(kind=pk) dimension(size(velocity_x,1),size(velocity_y,2),size(velocity_z,3)),intent(in,out),depend(velocity_x,velocity_y,velocity_z) :: omega_y
+        real(kind=pk) dimension(size(velocity_x,1),size(velocity_y,2),size(velocity_z,3)),intent(in,out),depend(velocity_x,velocity_y,velocity_z) :: omega_z
+        integer dimension(3),intent(in) :: ghosts_velo
+        integer dimension(3),intent(in) :: ghosts_vort
+    end subroutine solve_curl_3d
+    subroutine solve_curl_2d(velocity_x,velocity_y,omega_z,ghosts_velo,ghosts_vort) ! in fftw2py.f90:fftw2py
+        real(kind=pk) dimension(:,:),intent(in) :: velocity_x
+        real(kind=pk) dimension(:,:),intent(in) :: velocity_y
+        real(kind=pk) dimension(size(velocity_x,1),size(velocity_x,2)),intent(in,out),depend(velocity_x,velocity_x) :: omega_z
+        integer dimension(2),intent(in) :: ghosts_velo
+        integer dimension(2),intent(in) :: ghosts_vort
+    end subroutine solve_curl_2d
+    subroutine spectrum_3d(field,spectrum,wavelengths,ghosts,length) ! in fftw2py.f90:fftw2py
+        real(kind=pk) dimension(:,:,:),intent(in) :: field
+        real(kind=pk) dimension(:),intent(in,out) :: spectrum
+        real(kind=pk) dimension(:),intent(in,out) :: wavelengths
+        integer dimension(3),intent(in) :: ghosts
+        real(kind=pk) intent(in) :: length
+    end subroutine spectrum_3d
+end module fftw2py
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

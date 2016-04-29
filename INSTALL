@@ -1,0 +1,96 @@
+===========================
+HySoP package install
+===========================
+
+1 - Introduction
+2 - Configuration
+3 - Build
+4 - Install
+5 - Summary 
+
+===================================================================================================================
+1 - Introduction
+
+
+Requirements : 
+
+- a fortran compiler and a proper mpi implementation
+- fftw 
+- cmake > 2.8
+- a python implementation including numpy and mpi4py.
+- pytest library (install with python-pip)
+
+The install consists in 3 steps. First configuration of the package, makefile, setup.py and other files generation, then build of the underlying fortran libraries and of the python package and finally copy of the required files in the appropriate place.
+
+We denote :
+
+- SOURCEDIR as the directory which contains the sources (and this INSTALL file)
+- BUILDDIR the directory where the package will be configured and build
+- INSTALLDIR the directory where the package will be installed.
+Those 3 locations must be different. 
+
+===================================================================================================================
+2 - configuration : 
+
+You need to generate some makefile and a setup.py that fits with your platform, your compilers, 
+the libraries versions and so on. That will take place in BUILDDIR.
+
+  a - get SOURCEDIR (i.e. download the package any way you want)
+  b - create BUILDDIR.  Any place, preferably local to your machine for efficiency reasons.
+  c - enforce a fortran compiler using FC environment variable
+  c - Change to BUILDDIR and run cmake
+
+mkdir BUILDIR 
+cd BUILDDIR
+export FC=mpif90
+cmake SOURCEDIR
+
+At the end of this step BUILDDIR contains all makefiles, setup.py and other required files for compilation.
+
+Some useful options for cmake : 
+
+-DFFTW_DIR : where to find fftw if it's not in a "standard" place.
+-DWITH_SCALES=ON/OFF : to compile a hysop version including scales (default = on)
+-DWITH_PPM=ON/OFF : to compile  a hysop version including scales (default = off)
+-DWITH_TESTS=ON/OFF: enable testing (i.e. prepare target "make test", default = off)
+
+example :
+
+mkdir /home/mylogin/buildhysop
+cd /home/mylogin/buildhysop
+export FC=mpif90
+module load cmake-2.8
+cmake -DFFTW_DIR=/softs/install/fftw3.1 ~/Softs/HySoP
+
+===================================================================================================================
+3 - Build
+
+You need to build the underlying fortran libraries (mainly libhysop) and the python package.
+Just run "make" to do both.
+make python-build will run only python package building.
+
+===================================================================================================================
+4 - Install
+
+Run make python-install
+
+===================================================================================================================
+5 - Summary 
+
+Default process :
+
+mkdir BUILDDIR
+cd BUILDDIR
+export FC=mpif90
+cmake SOURCEDIR
+make -jN 
+make python-install
+
+Note : -jN for make command runs the build process on N processus. Choose a value of N that fits with your machine.
+
+Other useful commands :
+
+make python-cleaninstall : to remove all installed files for the current build.
+make clean : to clean the build (remove modules, .o ...)
+
+===================================================================================================================

@@ -1,0 +1,6 @@
+# E265 : pep8 ## comment
+# R0921 : pylint, abstract class not instanciate
+# R0913 : pylint, too many args in class method
+# R0902 : pylint, too many instance attributes
+IGNORE_CODES_PEP8 = ["E265"]
+IGNORE_CODES_PYLINT = ["R0913", "R0902", "R0921"]

@@ -1,0 +1,14 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+module hysopparam ! in parameters.f90
+    integer, parameter,optional :: pk=8
+    integer, parameter,optional :: ik=8
+end module hysopparam
+module hysopparam_sp ! in parameters.f90
+    integer, parameter,optional :: pk=4
+    integer, parameter,optional :: ik=8
+end module hysopparam_sp
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

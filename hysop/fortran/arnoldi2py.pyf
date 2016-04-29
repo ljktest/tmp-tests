@@ -1,0 +1,16 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+module arnoldi2py ! in arnoldi2py.f90
+    use arnoldi
+    use hysopparam
+    use mpi
+    subroutine arnoldi3d(solutions,ncli,ntot,nfp,nmodes,tps) ! in arnoldi2py.f90:arnoldi2py
+        real(kind=pk) dimension(:,:),intent(inout) :: solutions
+        integer intent(in) :: ncli
+        integer intent(in) :: ntot
+        integer intent(in) :: nfp
+        integer intent(in) :: nmodes
+        real(kind=pk) intent(in) :: tps
+    end subroutine arnoldi3d
+end module arnoldi2py

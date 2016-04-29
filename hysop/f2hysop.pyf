@@ -1,0 +1,20 @@
+!    -*- f90 -*-
+
+! Generated file - Do not edit.
+
+! Note: the context of this file is case sensitive.
+
+python module f2hysop ! in
+
+  interface
+      ! Example
+      include '/Users/Franck/Softs/hysop-all/hysop-ref/hysop/HySoP/hysop/fortran/template.pyf'
+      ! precision
+      include '/Users/Franck/Softs/hysop-all/hysop-ref/hysop/HySoP/hysop/f2py/parameters.pyf'
+      ! fftw
+      include '/Users/Franck/Softs/hysop-all/hysop-ref/hysop/HySoP/hysop/f2py/fftw2py.pyf'
+      ! scales
+      include '/Users/Franck/Softs/hysop-all/hysop-ref/hysop/HySoP/hysop/f2py/scales2py.pyf'
+  end interface
+
+end python module f2hysop

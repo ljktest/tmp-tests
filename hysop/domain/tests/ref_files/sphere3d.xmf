@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd">
+<Xdmf Version="2.0">
+ <Domain>
+  <Grid Name="CellTime" GridType="Collection" CollectionType="Temporal">
+   <Grid Name="Iteration 000" GridType="Uniform">
+    <Time Value="0.0" />
+    <Topology TopologyType="3DCORECTMesh" NumberOfElements="102  96  128 "/>
+    <Geometry GeometryType="ORIGIN_DXDYDZ">
+     <DataItem Dimensions="3 " NumberType="Float" Precision="8" Format="XML">
+     0.5  -0.29999999999999999  0.10000000000000001
+     </DataItem>
+     <DataItem Dimensions="3 " NumberType="Float" Precision="8" Format="XML">
+     0.061599855952741041  0.065449846949787352  0.049087385212340517
+     </DataItem>
+    </Geometry>
+    <Attribute Name="vref_0_X" AttributeType="Scalar" Center="Node">
+     <DataItem Dimensions="102  96  128 " NumberType="Float" Precision="8" Format="HDF" Compression="Raw">
+      sphere3d_00000.h5:/vref_0_X
+     </DataItem>
+    </Attribute>
+   </Grid>
+  </Grid>
+ </Domain>
+</Xdmf>

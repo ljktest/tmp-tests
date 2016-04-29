@@ -1,0 +1,325 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+setup.py file for @PYPACKAGE_NAME@
+
+"""
+from setuptools import find_packages
+from numpy.distutils.core import setup, Extension
+from numpy.distutils.misc_util import Configuration
+from distutils.spawn import find_executable
+
+import os
+import re
+import glob
+import fnmatch
+
+# tools to deal with fortran dependencies.
+import sys
+sys.path.append('@CMAKE_SOURCE_DIR@/')
+import sort_f90
+
+enable_cpp = "@WITH_LIB_CXX@"
+if enable_cpp:
+    swig_executable = find_executable("@SWIG_EXECUTABLE@")
+
+
+def parseCMakeVar(var):
+    if var != "":
+        return var.split(';')
+    else:
+        return None
+
+def parseCMakeDefines(var):
+    defines = parseCMakeVar(var)
+    if defines == None:
+        return None
+   
+    # regex to match compiler defines like -DMACRO_NAME or -DMACRO_NAME = MACRO_VALUE
+    p = re.compile('\s*(?:-D)?\s*(\w+)(?:\s*=\s*(\w+))?\s*')
+
+    res = list()
+    for d in defines:
+        m = p.match(d)
+        if m:
+            res.append(m.group(1,2))
+        else:
+            print "\tWarning: Could extract cmake define from '",d,"'."
+    return res
+
+
+hysop_link_libraries = parseCMakeVar("@HYSOP_LINK_LIBRARIES@")
+hysop_link_libraries_names = set([])
+hysop_link_libraries_dirs = set([])
+# use set to avoid dupl.
+link_list = ""
+for lib in hysop_link_libraries:
+    hysop_link_libraries_names.add(os.path.basename(lib))
+    hysop_link_libraries_dirs.add(os.path.dirname(lib))
+    link_list += lib + " "
+hysop_link_libraries_names = list(hysop_link_libraries_names)
+hysop_link_libraries_dirs = list(hysop_link_libraries_dirs)
+
+def create_fortran_extension(name, pyf_file=None, src_dirs=None, sources=None,
+                             libdir=None, libs=None, debug_mode=0):
+    """Create a new f2py module from fortran files
+    """
+    if sources is None:
+        sources = []
+        assert src_dirs is not None
+
+    for sdir in src_dirs:
+        sources += glob.glob(os.path.join(sdir, '*.f95'))
+        sources += glob.glob(os.path.join(sdir, '*.f90'))
+    f2py_options = ['--no-lower', '--no-wrap-functions']
+    options = []
+    # Reorder source list with fortran modules
+    # dependencies. It seems that this is not taken into
+    # account in f2py or distutils.
+    if pyf_file is not None:
+        sources.append(pyf_file)
+    sources = sort_f90.sort(sources)
+    if debug_mode == 0:
+        options.append(('F2PY_REPORT_ON_ARRAY_COPY', '1'))
+        if os.uname()[0] == 'Linux':
+            options.append(('F2PY_REPORT_ATEXIT', '1'))
+    inc_dir = '@MPI_Fortran_INCLUDE_PATH@'.split(';')
+    #  To avoid -I -I in compiler call, which results in a bug:
+    while inc_dir.count('') > 0:
+        inc_dir.remove('')
+    inc_dir.append('@CMAKE_BINARY_DIR@/Modules')
+    fortran_flags = ['@Fortran_FLAGS@']
+    
+    #includes = parseCMakeVar("@FORTRAN_INCLUDE_DIRS@")
+    #if(includes != None):
+        #for exti in includes:
+            #inc_dir.append(exti)
+    #libs += hysop_link_libraries_names
+    #libdir += hysop_link_libraries_dirs
+    # we trust cmake for external libraries and
+    # add them to linker, without using libraries option
+    extra_link_args = hysop_link_libraries
+    ext_fort = Extension(name=name,
+                         sources=sources,
+                         f2py_options=f2py_options,
+                         include_dirs=inc_dir,
+                         define_macros=options,
+                         library_dirs=libdir,
+                         libraries=libs,
+                         extra_f90_compile_args=fortran_flags,
+                         extra_link_args=extra_link_args
+                         )
+    return ext_fort
+
+
+def create_swig_extension(name, inc_dirs, src_dirs=None, sources=None):
+    """Create a python module from C++ files, using swig
+    """
+    swig_dir  = os.path.join('@CMAKE_SOURCE_DIR@', 'swig')
+    swig_config_file = os.path.join(swig_dir, name+'.i')
+
+    include_dirs = set(inc_dirs)
+    if sources is None:
+        sources = []
+        if(src_dirs == None):
+            assert(inc_dirs != None)
+            for idir in inc_dirs:
+                #sources += glob.glob(os.path.join(idir, '**/*.cpp'), recursive=True)
+                for root, dirnames, filenames in os.walk(idir):
+                    for filename in fnmatch.filter(filenames, '*.cpp'):
+                        sources.append(os.path.join(root, filename))
+        else:
+            for sdir in src_dirs:
+                sources += glob.glob(os.path.join(sdir, '*.cpp'))
+    #else:
+        #for f in sources:
+            #include_dirs.add(os.path.dirname(f))
+
+    sources.insert(0,swig_config_file)
+    include_dirs = list(include_dirs)
+
+    name = 'hysop._' + name
+    swig_opts = ['-I' + swig_dir,
+                 '-O', '-Wextra', '-Werror',
+                 '-c++', '-extranative', '-safecstrings']
+    
+    extern_includes = parseCMakeVar("@CXX_EXT_INCLUDES@")
+    if(extern_includes != None):
+        for exti in extern_includes:
+            include_dirs.append(exti)
+
+    libraries = parseCMakeVar("@CXX_EXT_LIBS@")
+    library_dirs = parseCMakeVar("@CXX_EXT_LIB_DIRS@")
+    extra_compile_args = parseCMakeVar("@CXX_FLAGS@")
+    extra_link_args = parseCMakeVar("@CXX_LINKER_FLAGS@")
+    define_macros = parseCMakeDefines("@CXX_EXTRA_DEFINES@")
+    swig_ext = Extension(name, sources=sources, language='c++',
+                         swig_opts=swig_opts,
+                         include_dirs=include_dirs,
+                         library_dirs=library_dirs,
+                         libraries=libraries,
+                         define_macros=define_macros,
+                         runtime_library_dirs=library_dirs,
+                         extra_compile_args=extra_compile_args,
+                         extra_link_args=extra_link_args)
+
+    return swig_ext
+
+
+# ------------ Set list of packages required to build the module -------------
+# List of modules (directories) to be included
+with_test = "@WITH_TESTS@" is "ON"
+if with_test:
+    packages = find_packages(exclude=["*fakef2py*", "*gpu*"],where="@CMAKE_SOURCE_DIR@")
+else:
+    packages = find_packages(exclude=["*tests*","*fakef2py*", "*gpu*"],where="@CMAKE_SOURCE_DIR@")
+
+# packages = ['hysop',
+#             'hysop.domain',
+#             'hysop.fields',
+#             'hysop.operator',
+#             'hysop.operator.discrete',
+#             'hysop.problem',
+#             'hysop.tools',
+#             'hysop.numerics',
+#             'hysop.numerics.integrators',
+#             ]
+
+# packages_for_tests = ['hysop.domain.tests',
+#                       'hysop.fields.tests',
+#                       'hysop.operator.tests',
+#                       'hysop.numerics.tests',
+#                       'hysop.tools.tests',
+#                       'hysop.problem.tests',
+#                       'hysop.numerics.tests',
+#                       ]
+
+# if "@USE_MPI@" is "ON":
+#     packages.append('hysop.mpi')
+#     packages_for_tests.append('hysop.mpi.tests')
+
+if "@WITH_GPU@" is "ON":
+    packages.append('hysop.gpu')
+    if with_test:
+        packages.append('hysop.gpu.tests')
+
+# Enable this to get debug info
+DISTUTILS_DEBUG = 1
+
+# ------------ Extensions (f2py, cython, ...) setup ------------
+
+ext_modules = []
+
+# Check if fortran interface is enabled
+enable_fortran = "@USE_FORTRAN@"
+ext = {}
+
+if enable_fortran is "ON":
+    fortran_root = \
+        '@CMAKE_SOURCE_DIR@/hysop'
+    hysop_libdir = ['@CMAKE_BINARY_DIR@/src']
+    hysoplib = ['@HYSOP_LIBRARY_NAME@']
+    f2py_options = ['--no-lower']
+    fortran_src = set([])
+    fortran_src.add('f2py/parameters.f90')
+    # -- fftw fortran sources --
+    withfftw = "@WITH_FFTW@"
+    if withfftw is "ON":
+        fortran_src.add('f2py/fftw2py.f90')
+        fftwdir = '@FFTWLIB@'
+        #hysoplib.append('fftw3')
+        #hysoplib.append('fftw3_mpi')
+        hysop_libdir.append(fftwdir)
+    else:
+        packages.append('hysop.fakef2py')
+        packages.append('hysop.fakef2py.fftw2py')
+    # -- scales sources --
+    withscales = '@WITH_SCALES@'
+    if withscales is "ON":
+        fortran_src.add('f2py/scales2py.f90')
+    else:
+        packages.append('hysop.fakef2py')
+        packages.append('hysop.fakef2py.scales2py')
+    # -- set full path to fortran sources --
+    fortran_src = list(fortran_src)
+    for i in xrange(len(fortran_src)):
+        fortran_src[i] = os.path.join(fortran_root, fortran_src[i])
+
+    # === Draft for future implementation of fortran interface ===
+    # -- f2py signature file --
+    pyf_file = os.path.join(fortran_root, 'f2hysop.pyf')
+    # -- list of directories which contains fortran sources --
+    # those dirs must be in hysop package directory
+    subdirs = ['fortran',]
+    num_dirs = []
+    for sd in subdirs:
+        num_dirs.append(os.path.join(fortran_root, sd))
+
+    # create python interface to fortran sources
+    # For the moment, it includes the 'old' interface
+    # to scales and fftw (in sources) and the new
+    # interface, in src_dirs
+    ext['f2hysop'] = create_fortran_extension(
+        name='hysop.f2hysop',
+        sources=fortran_src,
+        libdir=hysop_libdir,
+        libs=hysoplib,
+        pyf_file=pyf_file,
+        src_dirs=num_dirs)
+
+    for ex in ext:
+        ext_modules.append(ext[ex])
+
+else:
+    packages.append('hysop.fakef2py')
+    packages.append('hysop.fakef2py.scales2py')
+    packages.append('hysop.fakef2py.fftw2py')
+
+
+# --- C++ files and swig interface --
+
+if enable_cpp is "ON":
+    # path to .i files
+    swig_include_dirs = [os.path.join('@CMAKE_SOURCE_DIR@','swig')]
+
+    cpp_include_dirs = ['src/fftw','src/hysop++/src']
+    for id in cpp_include_dirs:
+        swig_include_dirs.append(os.path.join('@CMAKE_SOURCE_DIR@', id))
+
+    ext = {}
+    cpp2hysop = "@CPP_2_HYSOP@"
+    ext[cpp2hysop] = create_swig_extension(name=cpp2hysop, inc_dirs=swig_include_dirs)
+    for ex in ext:
+        ext_modules.append(ext[ex])
+
+data_files = []
+if "@WITH_GPU@" is "ON":
+    cl_src_dirs = ["cl_src", "cl_src/kernels",
+                   "cl_src/advection", "cl_src/remeshing"]
+    for cl_dir in cl_src_dirs:
+        data_files.append(
+            ('./hysop/gpu/' + cl_dir,
+             ['@CMAKE_SOURCE_DIR@/hysop/gpu/' + cl_dir + '/'
+              + cl_file
+              for cl_file in os.listdir(
+                  '@CMAKE_SOURCE_DIR@/hysop/gpu/' + cl_dir + '/')
+              if cl_file[0] != '.' and cl_file[0] != '#' and cl_file[-3:] == '.cl']))
+
+descr = 'Hybrid Computation with Particles.'
+authors = 'G.H Cottet, J.M Etancelin, J.B Keck, C.Mimeau, F.Pérignon, C. Picard'
+# authors = 'HySoP development team'
+config = Configuration(
+    name='@PACKAGE_NAME@',
+    version='@HYSOP_VERSION@',
+    description=descr,
+    author=authors,
+    author_email='hysop-members@lists.forge.imag.fr',
+    url='https://forge.imag.fr/projects/hysop/',
+    license='GNU General Public License (GPLv3)',
+    package_dir={'': '@CMAKE_SOURCE_DIR@'},
+    ext_modules=ext_modules,
+    packages=packages,
+    data_files=data_files,
+)
+
+setup(**config.todict())

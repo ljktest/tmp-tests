@@ -1,0 +1,63 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+module scales2py ! in scales2py.f90
+    use advec, only: advec_step_inter_two,advec_step_inter_basic,advec_step,advec_init
+    use interpolation_velo, only: interpol_init
+    use cart_topology, only: cart_rank,coord,n_proc,discretisation_set_mesh_velo,cart_create,set_group_size,discretisation_create
+    use advec_vect, only: advec_step_vect,advec_step_inter_basic_vect
+    use mpi
+    use hysopparam
+    subroutine init_advection_solver(ncells,lengths,topodims,main_comm,datashape,offset,dim,order,dim_split) ! in scales2py.f90:scales2py
+        integer dimension(dim),intent(in) :: ncells
+        real(kind=pk) dimension(dim),intent(in),depend(dim) :: lengths
+        integer dimension(dim),intent(in),depend(dim) :: topodims
+        integer intent(in) :: main_comm
+        integer(kind=ik) dimension(dim),intent(out),depend(dim) :: datashape
+        integer(kind=ik) dimension(dim),intent(out),depend(dim) :: offset
+        integer, optional,intent(hide),depend(ncells) :: dim=len(ncells)
+        character*(*), optional,intent(in) :: order='p_o2'
+        character*(*), optional,intent(in) :: dim_split
+    end subroutine init_advection_solver
+    subroutine init_multiscale(nx,ny,nz,formula) ! in scales2py.f90:scales2py
+        integer intent(in) :: nx
+        integer intent(in) :: ny
+        integer intent(in) :: nz
+        character*(*), optional,intent(in) :: formula
+    end subroutine init_multiscale
+    subroutine solve_advection(dt,vx,vy,vz,scal) ! in scales2py.f90:scales2py
+        real(kind=pk) intent(in) :: dt
+        real(kind=pk) dimension(:,:,:),intent(in) :: vx
+        real(kind=pk) dimension(:,:,:),intent(in) :: vy
+        real(kind=pk) dimension(:,:,:),intent(in) :: vz
+        real(kind=pk) dimension(size(vx,1),size(vx,2),size(vx,3)),intent(in,out),depend(size(vx,1)) :: scal
+    end subroutine solve_advection
+    subroutine solve_advection_vect(dt,vx,vy,vz,cx,cy,cz) ! in scales2py.f90:scales2py
+        real(kind=pk) intent(in) :: dt
+        real(kind=pk) dimension(:,:,:),intent(in) :: vx
+        real(kind=pk) dimension(:,:,:),intent(in) :: vy
+        real(kind=pk) dimension(:,:,:),intent(in) :: vz
+        real(kind=pk) dimension(size(vx,1),size(vx,2),size(vx,3)),intent(in,out),depend(size(vx,1)) :: cx
+        real(kind=pk) dimension(size(vx,1),size(vx,2),size(vx,3)),intent(in,out),depend(size(vx,1)) :: cy
+        real(kind=pk) dimension(size(vx,1),size(vx,2),size(vx,3)),intent(in,out),depend(size(vx,1)) :: cz
+    end subroutine solve_advection_vect
+    subroutine solve_advection_inter_basic(dt,vx,vy,vz,scal) ! in scales2py.f90:scales2py
+        real(kind=pk) intent(in) :: dt
+        real(kind=pk) dimension(:,:,:),intent(in) :: vx
+        real(kind=pk) dimension(:,:,:),intent(in) :: vy
+        real(kind=pk) dimension(:,:,:),intent(in) :: vz
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: scal
+    end subroutine solve_advection_inter_basic
+    subroutine solve_advection_inter_basic_vec(dt,vx,vy,vz,cx,cy,cz) ! in scales2py.f90:scales2py
+        real(kind=pk) intent(in) :: dt
+        real(kind=pk) dimension(:,:,:),intent(in) :: vx
+        real(kind=pk) dimension(:,:,:),intent(in) :: vy
+        real(kind=pk) dimension(:,:,:),intent(in) :: vz
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: cx
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: cy
+        real(kind=pk) dimension(:,:,:),intent(in,out) :: cz
+    end subroutine solve_advection_inter_basic_vec
+end module scales2py
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

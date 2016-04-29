@@ -1,0 +1,352 @@
+
+#ifndef HYSOP_MULTI_ARRAY_H
+#define HYSOP_MULTI_ARRAY_H
+
+/**********************************/
+/*** Hysop boost multi array wrapper ***/
+/********************************/
+
+#include "const_multi_array_view.h"
+#include "multi_array_view.h"
+
+namespace hysop {
+    namespace data {
+
+        /* forward declaration */
+        FORWARD_DECLARE_TYPES()
+    
+        /* class hysop::data::multi_array */
+        template <typename T, std::size_t Dim, typename Allocator>
+            class multi_array : public boost_multi_array<T,Dim,Allocator> {
+                static_assert(Dim>0, "Dim cannot be zero !");
+
+                private:
+                    using super     = boost_multi_array<T,Dim,Allocator>;
+                    using super_ref = boost_multi_array_ref<T,Dim>;
+                public:
+                    PUBLIC_CLASS_TYPES()
+
+                public:
+                    multi_array(const extents_gen<Dim>& extents = extents_gen<Dim>());
+                    multi_array(const Shape<Dim>& shape);
+
+                    multi_array(const multi_array& other);
+                    multi_array(multi_array&& other);
+
+                    explicit multi_array(const array_ref& other);
+                    explicit multi_array(const array_view& other);
+                    explicit multi_array(const const_array_ref& other);
+                    explicit multi_array(const const_array_view& other);
+                   
+                    explicit multi_array(const boost_multi_array<T,Dim,Allocator>& other);
+                    explicit multi_array(const boost_multi_array_ref<T,Dim>& other);
+                    explicit multi_array(const boost_multi_array_view<T,Dim>& other);
+                    explicit multi_array(const boost_const_multi_array_ref<T,Dim>& other);
+                    explicit multi_array(const boost_const_multi_array_view<T,Dim>& other);
+                    explicit multi_array(boost_multi_array<T,Dim,Allocator>&& other);
+
+                    multi_array& operator=(const multi_array& other);
+                    multi_array& operator=(const array_ref& ref);
+                    multi_array& operator=(const array_view& view);
+                    multi_array& operator=(const const_array_ref& ref);
+                    multi_array& operator=(const const_array_view& view);
+                    multi_array& operator=(multi_array&& other);
+
+                    operator array_ref();
+                    operator const_array_ref() const;
+
+                public:
+
+                    multi_array& reshape(const Shape<Dim>& shape);
+                    
+                    /* print data */
+                    const multi_array& print(const std::string& name, std::ostream& os = std::cout, 
+                            unsigned int precision=2u, unsigned int width=6u) const;
+
+                    /* Apply function to all elements of the view */
+                    /* (1) apply func(T&) on all elements */
+                    /* (2) apply func(T&, const Index<Dim>&) on all elements */
+                    /* (3) apply func(T&, const Index<Dim>&, farg0, fargs...) on all elements */
+                    multi_array& apply(const std::function<void(T&)>& func);
+                    multi_array& apply(const std::function<void(T&, const Index<Dim>&)>& func);
+                    template <typename Functor, typename Arg0, typename... Args> 
+                        multi_array& apply(const Functor& func, Arg0&& farg0, Args&&... fargs);
+
+                    /* boolean array_view specific functions */
+                    ENABLE_IF_BOOL(bool) all() const;
+                    ENABLE_IF_BOOL(bool) any() const;
+                    ENABLE_IF_BOOL(bool) none() const;
+
+                    /* real and complex data accessors, usefull for FFT like transforms */
+                    ENABLE_IF_REAL   (      T*) rdata()       { return this->origin(); }
+                    ENABLE_IF_REAL   (const T*) rdata() const { return this->origin(); }
+
+                    ENABLE_IF_COMPLEX(      T*) cdata()       { return this->origin(); }
+                    ENABLE_IF_COMPLEX(const T*) cdata() const { return this->origin(); }
+
+                    ENABLE_IF_COMPLEX(      typename fft::fftw_complex_type<T>::std_type*) std_cdata() { 
+                        return reinterpret_cast<      typename fft::fftw_complex_type<T>::std_type*>(this->origin()); 
+                    }
+                    ENABLE_IF_COMPLEX(const typename fft::fftw_complex_type<T>::std_type*) std_cdata() const { 
+                        return reinterpret_cast<const typename fft::fftw_complex_type<T>::std_type*>(this->origin()); 
+                    }
+                    ENABLE_IF_COMPLEX(      typename fft::fftw_complex_type<T>::fftw_type*) fftw_cdata() { 
+                        return reinterpret_cast<      typename fft::fftw_complex_type<T>::fftw_type*>(this->origin()); 
+                    }
+                    ENABLE_IF_COMPLEX(const typename fft::fftw_complex_type<T>::fftw_type*) fftw_cdata() const { 
+                        return reinterpret_cast<const typename fft::fftw_complex_type<T>::fftw_type*>(this->origin()); 
+                    }
+
+                    ENABLE_IF_COMPLEX(      typename fft::fftw_complex_type<T>::value_type*) asRealData() { 
+                        return reinterpret_cast<       typename fft::fftw_complex_type<T>::value_type*>(this->origin()); 
+                    }
+                    ENABLE_IF_COMPLEX(const typename fft::fftw_complex_type<T>::value_type*) asRealData() const { 
+                        return reinterpret_cast< const typename fft::fftw_complex_type<T>::value_type*>(this->origin()); 
+                    }
+                    ENABLE_IF_REAL   (      typename fft::fftw_complex_type<T>::std_type*) asStdComplexData() { 
+                        return reinterpret_cast<      typename fft::fftw_complex_type<T>::std_type*>(this->origin()); 
+                    }
+                    ENABLE_IF_REAL   (const typename fft::fftw_complex_type<T>::std_type*) asStdComplexdata() const { 
+                        return reinterpret_cast<const typename fft::fftw_complex_type<T>::std_type*>(this->origin()); 
+                    }
+                    ENABLE_IF_REAL   (      typename fft::fftw_complex_type<T>::fftw_type*) asFftwComplexdata() { 
+                        return reinterpret_cast<      typename fft::fftw_complex_type<T>::fftw_type*>(this->origin()); 
+                    }
+                    ENABLE_IF_REAL   (const typename fft::fftw_complex_type<T>::fftw_type*) asFftwComplexData() const { 
+                        return reinterpret_cast<const typename fft::fftw_complex_type<T>::fftw_type*>(this->origin()); 
+                    }
+
+                protected:
+                    static extents_gen<Dim> shapeToExtents(const Shape<Dim> &shape);
+            };
+
+
+        /* Implementation */
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(const extents_gen<Dim>& extents):
+            boost_multi_array<T,Dim,Allocator>(extents) {}
+                    
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(const Shape<Dim>& shape):
+            boost_multi_array<T,Dim,Allocator>(shapeToExtents(shape)) {}
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(const multi_array& other):
+            boost_multi_array<T,Dim,Allocator>(static_cast<const boost_multi_array<T,Dim>&>(other)) {}
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(const array_view& other):
+            boost_multi_array<T,Dim,Allocator>(static_cast<const boost_multi_array_view<T,Dim>&>(other)) {}
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(const const_array_view& other):
+            boost_multi_array<T,Dim,Allocator>(static_cast<const boost_multi_array_view<T,Dim>&>(other)) {}
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(multi_array&& other):
+            boost_multi_array<T,Dim,Allocator>(static_cast<boost_multi_array<T,Dim,Allocator>&&>(other)) {}
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(const boost_multi_array_view<T,Dim>& other):
+            boost_multi_array<T,Dim,Allocator>(other) {}
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(const boost_const_multi_array_view<T,Dim>& other):
+            boost_multi_array<T,Dim,Allocator>(other) {}
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(const boost_multi_array_ref<T,Dim>& other):
+            boost_multi_array<T,Dim,Allocator>(other) {}
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(const boost_const_multi_array_ref<T,Dim>& other):
+            boost_multi_array<T,Dim,Allocator>(other) {}
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+        multi_array<T,Dim,Allocator>::multi_array(boost_multi_array<T,Dim,Allocator>&& other):
+            boost_multi_array<T,Dim,Allocator>(other) {}
+
+
+        template <typename T, std::size_t Dim, typename Allocator> 
+            multi_array<T,Dim,Allocator>& multi_array<T,Dim,Allocator>::operator=(const array_view& other) {
+                this->reshape(other.shape());
+                /* cast obligatory to avoid shape() function aliasing */
+                super::operator=(dynamic_cast<const boost_multi_array_view<T,Dim>&>(other));
+                return *this;
+            }
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+            multi_array<T,Dim,Allocator>& multi_array<T,Dim,Allocator>::operator=(const const_array_view& other) {
+                this->reshape(other.shape());
+                /* cast obligatory to avoid shape() function aliasing */
+                super::operator=(dynamic_cast<const boost_multi_array_view<T,Dim>&>(other));
+                return *this;
+            }
+        
+        template <typename T, std::size_t Dim, typename Allocator> 
+            multi_array<T,Dim,Allocator>& multi_array<T,Dim,Allocator>::operator=(const multi_array& other) {
+                this->reshape(other.shape());
+                /* cast obligatory to avoid shape() function aliasing */
+                super::operator=(dynamic_cast<const boost_multi_array_ref<T,Dim>&>(other));
+                return *this;
+            }
+
+        template <typename T, std::size_t Dim, typename Allocator> 
+            multi_array<T,Dim,Allocator>& multi_array<T,Dim,Allocator>::operator=(multi_array&& other) {
+                super::operator=(other);
+                return *this;
+            }
+
+        template <typename T, std::size_t Dim, typename Allocator> 
+            multi_array<T,Dim,Allocator>::operator array_view() {
+                return this->operator[](hysop::utils::buildView<Dim>());
+            }
+        template <typename T, std::size_t Dim, typename Allocator> 
+            multi_array<T,Dim,Allocator>::operator const_array_view() const {
+                return this->operator[](hysop::utils::buildView<Dim>());
+            }
+
+            
+        template <typename T, std::size_t Dim, typename Allocator> 
+            Shape<Dim> multi_array<T,Dim,Allocator>::shape() const {
+                Shape<Dim> shape;
+                const std::size_t* extents = this->super::shape();
+                for (std::size_t d = 0; d < Dim; d++)
+                    shape[d] = static_cast<std::size_t>(extents[d]);
+                return shape;
+            }
+
+        template <typename T, std::size_t Dim, typename Allocator> 
+            multi_array<T,Dim,Allocator>& multi_array<T,Dim,Allocator>::reshape(const Shape<Dim>& shape) { 
+                boost::array<int,Dim> extents;
+                for (std::size_t d = 0; d < Dim; d++)
+                    extents[d] = static_cast<int>(shape[d]);
+                this->resize(extents);
+                return *this;
+            }
+                    
+        template <typename T, std::size_t Dim, typename Allocator> 
+        typename multi_array<T,Dim,Allocator>::template extents_gen<Dim> multi_array<T,Dim,Allocator>::shapeToExtents(const Shape<Dim> &shape) {
+            return utils::buildExtents(shape);
+        }
+        
+        template <typename T, std::size_t Dim, typename Allocator>
+            multi_array<T,Dim,Allocator>& multi_array<T,Dim,Allocator>::apply(const std::function<void(T&)>& func) {
+                T* data = this->origin();
+                for (std::size_t k = 0; k < this->num_elements(); k++) {
+                    func(data[k]);
+                } 
+                return *this;
+            }
+        template <typename T, std::size_t Dim, typename Allocator>
+            multi_array<T,Dim,Allocator>& multi_array<T,Dim,Allocator>::apply(const std::function<void(T&, const Index<Dim>&)>& func) {
+                hysop::Index<Dim> idx(this->shape());
+                T* data = this->origin();
+                for (std::size_t k = 0; k < this->num_elements(); k++) {
+                    func(data[k], idx);
+                    ++idx;
+                }
+                return *this;
+            }
+
+        template <typename T, std::size_t Dim, typename Allocator>
+            template <typename Functor, typename Arg0, typename... Args>
+            multi_array<T,Dim,Allocator>& multi_array<T,Dim,Allocator>::apply(const Functor& func, Arg0&& farg0, Args&&... fargs) {
+                hysop::Index<Dim> idx(this->shape());
+                T* data = this->origin();
+                for (std::size_t k = 0; k < this->num_elements(); k++) {
+                    func(data[k], idx, std::forward<Arg0>(farg0), std::forward<Args>(fargs)...);
+                    ++idx;
+                }
+                return *this;
+            }
+
+        template <typename T, std::size_t Dim, typename Allocator>
+            const multi_array<T,Dim,Allocator>& multi_array<T,Dim,Allocator>::print(const std::string& name, std::ostream& os, 
+                    unsigned int precision, unsigned int width) const {
+                auto S = this->super::shape();
+                std::size_t id = 0;
+
+                os << name << " = [";
+                if(Dim==1 || Dim>3) {
+                    for(std::size_t k=0; k<this->num_elements(); k++) {
+                        T x = this->data()[id++];
+                        os << std::fixed << std::showpos << std::setprecision(precision) << std::setw(width) << x << " ";
+                    }
+                }
+                else if(Dim==2) {
+                    std::cout << std::endl;
+                    for(std::size_t i=0; i<S[0]; i++) {
+                        os << "\t[";
+                        for(std::size_t j=0; j<S[1]; j++) {
+                            T x = this->data()[id++];
+                            os << std::fixed << std::showpos << std::setprecision(precision) << std::setw(width) << x << " ";
+                        }
+                        os << "]" << std::endl;
+                    }
+                }
+                else {
+                    std::cout << std::endl;
+                    for(std::size_t i=0; i<S[0]; i++) {
+                        os << "\t[[";
+                        for(std::size_t j=0; j<S[1]; j++) {
+                            if(j>0)
+                                os << "\t [";
+                            for(std::size_t k=0; k<S[2]; k++) {
+                                T x = this->data()[id++];
+                                os << std::fixed << std::showpos << std::setprecision(precision) << std::setw(width) << x << " ";
+                            }
+                            if(j!=S[1]-1)
+                                os << "]" << std::endl;
+                            else
+                                os << "]]," << std::endl;
+                        }
+                    }
+                }
+                os << "];" << std::endl;
+                return *this;
+            }
+
+        /* boolean specific functions */
+        template <typename T, std::size_t Dim, typename Allocator>
+            template <typename TT>
+            typename std::enable_if<std::is_same<TT,bool>::value, bool>::type multi_array<T,Dim,Allocator>::all() const {
+                for(std::size_t k=0; k<this->num_elements(); k++) {
+                    if(!this->data()[k])
+                        return false;
+                }
+                return true;
+            }
+
+        template <typename T, std::size_t Dim, typename Allocator>
+            template <typename TT>
+            typename std::enable_if<std::is_same<TT,bool>::value, bool>::type multi_array<T,Dim,Allocator>::any() const {
+                for(std::size_t k=0; k<this->num_elements(); k++) {
+                    if(this->data()[k])
+                        return true;
+                }
+                return false;
+            }
+
+        template <typename T, std::size_t Dim, typename Allocator>
+            template <typename TT>
+            typename std::enable_if<std::is_same<TT,bool>::value, bool>::type multi_array<T,Dim,Allocator>::none() const {
+                for(std::size_t k=0; k<this->num_elements(); k++) {
+                    if(this->data()[k])
+                        return false;
+                }
+                return true;
+            }
+
+
+    } /* end of namespace data */ 
+} /* end of namespace hysop */
+
+#undef ENABLE_IF_BOOL
+#undef ENABLE_IF_REAL
+#undef ENABLE_IF_COMPLEX
+
+#include "multi_array_ext.h"
+
+#endif /* end of include guard: HYSOP_MULTI_ARRAY_H */

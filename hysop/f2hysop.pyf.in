@@ -1,0 +1,20 @@
+!    -*- f90 -*-
+
+! Generated file - Do not edit.
+
+! Note: the context of this file is case sensitive.
+
+python module f2hysop ! in
+
+  interface
+      ! Example
+      include '@CMAKE_SOURCE_DIR@/hysop/fortran/template.pyf'
+      ! precision
+      include '@CMAKE_SOURCE_DIR@/hysop/f2py/parameters.pyf'
+      ! fftw
+      include '@CMAKE_SOURCE_DIR@/hysop/f2py/fftw2py.pyf'
+      ! scales
+      include '@CMAKE_SOURCE_DIR@/hysop/f2py/scales2py.pyf'
+  end interface
+
+end python module f2hysop

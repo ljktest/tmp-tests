@@ -1,0 +1,13 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+module template_f2py ! in template.f95
+    integer, parameter,optional :: var1=12
+    subroutine check_f2py(input,output) ! in template.f95:template_f2py
+        real(kind=8), dimension(:, :), intent(in) :: input
+        real(kind=8), dimension(size(input,1), size(input,2)), intent(in,out), depend(input,input) :: output
+    end subroutine check_f2py
+end module template_f2py
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

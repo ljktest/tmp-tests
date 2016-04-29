@@ -1,5 +1,6 @@
 before_script:
-  - apt-get update -qq && apt-get install -y -qq python
+  - apt-get update -qq && apt-get install -y -qq python cmake
+  - pip install cython numpy scipy 
 
 
 build:

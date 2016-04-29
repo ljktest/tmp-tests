@@ -6,9 +6,14 @@ before_script:
   - pip install cython
   - pip install mpi4py
 
-
 build:
   script:
+    - wget https://pypi.python.org/packages/22/82/64dada5382a60471f85f16eb7d01cc1a9620aea855cd665609adf6fdbb0d/h5py-2.6.0.tar.gz
+    - tar -zxvf h5py-2.6.0.tar.gz
+    - cd h5py-2.6.0
+    - export CC=mpicc
+    - python setup.py configure --mpi --hdf5=/usr/
+    - python setup.py install
     - mkdir build/
     - cd build
     - cmake -D CMAKE_BUILD_TYPE=Debug -DWITH_LIB_CXX=OFF ..

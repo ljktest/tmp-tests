@@ -1,9 +1,10 @@
 before_script:
-  - apt-get update -qq && apt-get install -y -qq python cmake python-dev liblapacke-dev libatlas-base-dev gcc gfortran python-pip openmpi-bin libopenmpi-dev libhdf5-openmpi-dev
+  - apt-get update -qq && apt-get install -y -qq python cmake python-dev liblapacke-dev libatlas-base-dev gcc libgfortran3 libgcc1 libgcc-4.9-dev gfortran python-pip openmpi-bin libopenmpi-dev libhdf5-openmpi-dev
   - pip install --upgrade pip
-  - pip install setuptools
+  - pip install --upgrade setuptools
   - pip install cython mako
-  - pip install numpy scipy mpi4py pyopencl	
+  - pip install numpy
+  - pip install scipy mpi4py pyopencl	
 
 
 build:

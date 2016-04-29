@@ -1,5 +1,5 @@
 before_script:
-  - apt-get update -qq && apt-get install -y -qq python cmake python-dev liblapacke-dev libatlas-base-dev gcc-4.7-base python-pip openmpi-bin libopenmpi-dev libhdf5-openmpi-dev
+  - apt-get update -qq && apt-get install -y -qq python cmake python-dev liblapacke-dev libatlas-base-dev gcc python-pip openmpi-bin libopenmpi-dev libhdf5-openmpi-dev
   - pip install cython numpy scipy mpi4py pyopencl	
 
 

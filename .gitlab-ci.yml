@@ -1,6 +1,6 @@
 before_script:
-  - apt-get update -qq && apt-get install -y -qq python cmake
-  - pip install cython numpy scipy 
+  - apt-get update -qq && apt-get install -y -qq python cmake python-pip 
+  - pip install cython numpy scipy mpi4py
 
 
 build:

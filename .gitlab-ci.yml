@@ -1,5 +1,5 @@
 before_script:
-  - apt-get update -qq && apt-get install -y -qq python cmake python-dev liblapacke-dev libatlas-base-dev gcc libgfortran3 libgcc1 libgcc-4.9-dev gfortran python-pip openmpi-bin libopenmpi-dev libhdf5-openmpi-dev
+  - apt-get update -qq && apt-get install -y -qq python cmake python-dev libblas-dev liblapacke-dev libatlas-base-dev libatlas-dev gcc libgfortran3 libgcc1 libgcc-4.9-dev gfortran python-pip openmpi-bin libopenmpi-dev libhdf5-openmpi-dev
   - pip install --upgrade pip
   - pip install --upgrade setuptools
   - pip install cython mako

@@ -1,9 +1,10 @@
+language: python
+
 before_install:
 	- sudo apt-get update -qq
 	- sudo apt-get install -qq python cmake python-dev libblas-dev liblapacke-dev libatlas-base-dev libatlas-dev gcc libgfortran3 libgcc1 libgcc-4.9-dev gfortran python-pip openmpi-bin libopenmpi-dev libhdf5-openmpi-dev python-numpy python-scipy python-pyopencl python-scitools libfftw3-dev libfftw3-mpi-dev python-pytest cython
 
 
-language: python
 python:
   - "2.7"
 # command to install dependencies
